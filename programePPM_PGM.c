@@ -217,33 +217,71 @@ picture* ppm_to_pgm(picture *image){
 }
 
 void write_picture(picture *image, char *file_name, int binary) {
+
   FILE *f;
+  int i, j;
+
+  // Ouvrir le fichier en mode d'écriture
   f = fopen(file_name, "wb");
-    if(image->type=='0'){
-        if (binary==0) {
-            fprintf(f, "P6\n%d\n%d\n%d\n", image->largeur, image->hauteur, image->value_max);
-            fwrite(image->pixels, sizeof(int), image->largeur * image->hauteur, f);
-        } else {
-            fprintf(f, "P3\n%d %d\n%d\n", image->largeur, image->hauteur, image->value_max);
-            for (int i = 0; i < image->largeur * image->hauteur ; i++) {
-            fprintf(f, "%d\n", image->pixels[i]);
-            }
+  if (f == NULL) {
+    printf("Impossible d'ouvrir le fichier %s\n", file_name);
+    return;
+  }
+
+  // Écrire les entêtes PPM ou PGM selon le cas
+  if (image->type == '1') { // image->type non défini, prend 0 par défaut{
+
+    // Écrire les données de l'image en mode ASCII ou binaire
+    if (binary == 1) {
+      fprintf(f, "P6\n%d %d\n%d\n", image->largeur, image->hauteur,
+              image->value_max);
+      for (i = 0; i < (int) image->hauteur; i++) {
+        for (j = 0; j < (int) image->largeur; j++) {
+          fwrite(&image->pixels_rgb[i][j].R, sizeof(image->pixels_rgb[i][j].R),
+                 1, f);
+          fwrite(&image->pixels_rgb[i][j].G, sizeof(image->pixels_rgb[i][j].G),
+                 1, f);
+          fwrite(&image->pixels_rgb[i][j].B, sizeof(image->pixels_rgb[i][j].B),
+                 1, f);
         }
+      }
+    } else {
+      fprintf(f, "P3\n%d %d\n%d\n", image->largeur, image->hauteur,
+              image->value_max);
+      for (i = 0; i < (int) image->hauteur; i++) {
+        for (j = 0; j < (int) image->largeur; j++) {
+          fprintf(f, "%d %d %d\n", image->pixels_rgb[i][j].R,
+                  image->pixels_rgb[i][j].G, image->pixels_rgb[i][j].B);
+        }
+      }
     }
-   /* if(image->type==1){
-        if (binary) {
-            fprintf(fp, "P6\n%d %d\n%d\n", image->largeur, image->hauteur, image->value_max);
-            fwrite(image->pixels_rgb, sizeof(int), image->largeur * image->hauteur * 3, fp);
-        } else {
-            fprintf(fp, "P3\n%d %d\n%d\n", image->largeur, image->hauteur, image->value_max);
-            for (int i = 0; i < image->largeur * image->hauteur * 3; i++) {
-            fprintf(fp, "%d\n", image->pixels[i]);
-            }
+  }
+
+  else {
+
+    if (binary == 1) {
+      fprintf(f, "P5\n%d %d\n%d\n", image->largeur, image->hauteur,
+              image->value_max);
+      for (i = 0; i < (int) image->hauteur; i++) {
+        for (j = 0; j < (int) image->largeur; j++) {
+          fwrite(&image->pixels[i][j], sizeof(image->pixels[i][j]), 1, f);
         }
-    }*/
+      }
+    } else {
+      fprintf(f, "P2\n%d %d\n%d\n", image->largeur, image->hauteur,
+              image->value_max);
+      for (i = 0; i < (int) image->hauteur; i++) {
+        for (j = 0; j < (int) image->largeur; j++) {
+          fprintf(f, "%d  ", image->pixels[i][j]);
+        }
+        fprintf(f, "\n");
+      }
+    }
+  }
+
+  // Fermer le fichier
   fclose(f);
 }
-
 
 
 void print_image(picture* image){

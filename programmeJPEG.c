@@ -358,18 +358,11 @@ void DCT(double bloc[8][8]){
             temp[i][j] = 2.*sum*cu*cv/N;
             printf("%.2lf ", temp[i][j]);
             sum = 0;
-        }// copier le temp dans blonc
+            bloc[i][j] = temp[i][j];
+        }
         
         printf("\n");
     }
-
-    /*for(int i=0; i<8; i++){
-      for(int j=0; j<8; j++){
-        bloc[i][j] = temp[i][j];
-        printf("%f ", bloc[i][j]);
-      }
-      printf("\n");
-    }*/
 }
 
 void quantify(double bloc[8][8]){
@@ -377,16 +370,86 @@ void quantify(double bloc[8][8]){
   for(int i=0; i<8; i++){
     for(int j=0; j<8; j++){
       printf("%lf / %lf ", bloc[i][j], Q[i][j]);
-      DCT(bloc) /= Q[i][j];
+      bloc[i][j] /= Q[i][j];
       printf("%lf ", bloc[i][j]);
     }
     printf("\n");
   }
+}
+void zigzag_extraction(double bloc[8][8],int zigzag[64]) {
 
+    int i;
+    int j;
+    i = 0;
+    j = 0;
+
+
+    int croiss;
+    croiss = 0;
+
+    int k=0;
+   
+    while (i <= 7 && j <= 7)
+    {
+        
+    zigzag[k]=round(bloc[i][j]);
+    k++;
+        if (i == 0 || i == 7) 
+        {
+            if (j == 7) 
+            {
+                j = j - 1;
+                i = i + 1;
+            }
+            j = j + 1;
+            zigzag[k]=round(bloc[i][j]);
+        k++;
+        }
+        else
+        {
+            if (j == 0 || j == 7) 
+            {
+                if (i == 7) 
+                {
+                    i = i - 1;
+                    j = j + 1;
+                }
+                i = i + 1;
+                zigzag[k]=round(bloc[i][j]);
+                k++;
+            }
+        }
+            
+            if (i == 0 || j == 7) { croiss = 0;}
+            if (j == 0 || i == 7)  { croiss = 1;}
+        
+            if (croiss==1) 
+                {
+                    i = i - 1;
+                    j = j + 1;
+                }
+                else
+                {
+                    i = i + 1;
+                    j = j - 1;
+                }
+    }
+}
+void compress_RLE(FILE *f, int zigzag[64]){
+    int i=0,b=0,cpt=0;
+    while(i<64 ){
+        if(zigzag[i]!= 0)
+            fprintf(f,"@ %d",zigzag[i]);
+        else{
+            cpt++;
+        }    
+    }
+    fprintf(f,"%d",cpt);
 }
 
-
 int main(int argv, char **argc) {
+    FILE *f;
+    f=fopen();
 
   if (argv != 2) {
     printf("Utilise ./main images/'nom_image.ppm'");
@@ -396,20 +459,17 @@ int main(int argv, char **argc) {
   /*picture *image = get_picture((argc[1]));
   picture *image_PGM = ppm_to_pgm(image);
   // print_image(image_PGM);
-
   int l = 0;
   for (int i = 0; argc[1][i]; i++)
     l++;
-
   l -= 2;
-
   argc[1][l] = 'g';
   write_picture(image_PGM, (argc[1]), 0);
   free_picture(image_PGM);
   free_picture(image);*/
 
   picture *image = get_picture((argc[1]));
-
+  int zigzag[64];  
   double bloc[8][8];
   int i = 0;
   int j = 0;
@@ -427,6 +487,7 @@ int main(int argv, char **argc) {
   DCT(bloc);
 
   quantify(bloc);
+  zigzag_extraction(bloc,zigzag);
 
 
   return 0;
