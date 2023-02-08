@@ -313,8 +313,10 @@ void print_image(picture *image) {
 
 void extract_bloc(picture *image, double bloc[N][N], int i, int j) {
   for (int k = i; k < i + N; k++) {
-    for (int z = j; z < j + N; z++)
+    for (int z = j; z < j + N; z++){
       bloc[k][z] = round(image->pixels[k][z]);
+      printf("%.2lf ", bloc[k][z]);
+    }printf("\n");
   }
 }
 
@@ -348,8 +350,10 @@ void DCT(double bloc[N][N]) {
   }
 
   for (int i = 0; i < N; i++) {
-    for (int j = 0; j < N; j++) 
+    for (int j = 0; j < N; j++){
       bloc[i][j] = temp[i][j];
+      printf("%.2lf ", bloc[i][j]);
+    } printf("\n");
   }
   
 }
@@ -357,8 +361,10 @@ void DCT(double bloc[N][N]) {
 void quantify(double bloc[N][N]) {
 
   for (int i = 0; i < N; i++) {
-    for (int j = 0; j < N; j++)
+    for (int j = 0; j < N; j++){
       bloc[i][j] /= Q[j][i];
+      printf("%.2lf ", bloc[i][j]);
+    } printf("\n");
   }
   
 }
@@ -413,6 +419,14 @@ void zigzag_extraction(double bloc[N][N], int zigzag[N * N]) {
       q++;
     }
   }
+  int u = 0;
+  for(int i =0; i<N; i++){
+    for(int j =0; j<N; j++){
+      printf("%d ", zigzag[u]);
+      u++;
+    } printf("\n");
+  }
+
 }
 
 void compress_RLE(FILE *f, int zigzag[N * N]) {
@@ -444,8 +458,8 @@ void jpeg_compression(picture *image, char *file_name) {
   int zigzag[N * N];
 
   fprintf(f, "JPEG\n%d %d\n", image->largeur, image->hauteur);
-  for (int i = 0; i < (int) image->hauteur; i += N) {
-    for (int j = 0; j < (int) image->largeur; j += N) {
+  for (int i = 0; i < (int) image->hauteur; i += N) { // i += N pour sauter un bloc de 8
+    for (int j = 0; j < (int) image->largeur; j += N) { // j += N pour sauter un bloc de 8
       extract_bloc(image, bloc, i, j);
       DCT(bloc);
       quantify(bloc);
@@ -494,7 +508,7 @@ int main(int argv, char **argc) {
   write_picture(image_PGM, file_name_pgm, 0);
 
   printf("Le fichier %s pèse %u octets\n", file_name_pgm, file_size(file_name_pgm));
-  
+  /*
   argc[1][l + 1] = '\0';
   argc[1][l] = 'g';
   argc[1][l - 1] = 'e';
@@ -508,6 +522,23 @@ int main(int argv, char **argc) {
   printf("Le fichier %s pèse %u octets\n", file_name_jpeg, file_size(file_name_jpeg));
 
   printf("Le taux de compression de ce fichier est de %.2u\n", (file_size(file_name_jpeg)/file_size(file_name_pgm)));
+  */
+  
+
+  double bloc[N][N];
+  int zigzag[N * N];
+
+  extract_bloc(image_PGM, bloc, 0, 32);
+  printf("\n");
+  DCT(bloc);
+  printf("\n");
+  quantify(bloc);
+  printf("\n");
+  zigzag_extraction(bloc, zigzag);
+  printf("\n");
+
+  FILE *f = fopen("test", "w");
+  compress_RLE(f, zigzag);
 
   free_picture(image_PGM);
   free_picture(image);
